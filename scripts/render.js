@@ -1,5 +1,5 @@
 var data = {
-    labels: ["0 sec", "10 sec", "20 sec", "30 sec", "40 sec", "50 sec", "60 sec", "70 sec", "80 sec", "90 sec"],
+    labels: [],
     datasets: [
         {
             label: "1 minute",
@@ -7,7 +7,7 @@ var data = {
             strokeColor: "rgba(220,220,220,0.8)",
             highlightFill: "rgba(220,220,220,0.75)",
             highlightStroke: "rgba(220,220,220,1)",
-            data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            data: []
         },
         {
             label: "5 minute",
@@ -15,7 +15,7 @@ var data = {
             strokeColor: "rgba(151,187,205,0.8)",
             highlightFill: "rgba(151,187,205,0.75)",
             highlightStroke: "rgba(151,187,205,1)",
-            data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            data: []
         },
         {
             label: "15 minute",
@@ -23,7 +23,7 @@ var data = {
             strokeColor: "rgba(151,167,195,0.8)",
             highlightFill: "rgba(151,167,195,0.75)",
             highlightStroke: "rgba(151,167,195,1)",
-            data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            data: []
         }
     ]
 };
@@ -71,19 +71,46 @@ $( document ).ready(function() {
 
    function updateData(frequency) {
         setTimeout(function() {
-            $.get( "/uptime", function( dataList ) {
+            $.get( "/uptime", function( dataProcessor ) {
               data.datasets[ 0 ].data = [];
               data.datasets[ 1 ].data = [];
               data.datasets[ 2 ].data = [];
-              dataList.forEach(function(loadData, index) {
-                   myLineChart.datasets[ 0 ].bars[ index ].value = loadData.last1Min;
-                   myLineChart.datasets[ 1 ].bars[ index ].value = loadData.last5Min;
-                   myLineChart.datasets[ 2 ].bars[ index ].value = loadData.last15Min;
+
+              dataProcessor.queue.forEach(function(loadData, index) {
+
+
+                    myLineChart.datasets[ 0 ].bars[ index ].value = loadData.last1Min;
+                    myLineChart.datasets[ 1 ].bars[ index ].value = loadData.last5Min;
+                    myLineChart.datasets[ 2 ].bars[ index ].value = loadData.last15Min;
               });
+
               myLineChart.update();
             });
             updateData(frequency);
         }, frequency);
+   }
+
+   function updateAlertQueue(list, data) {
+        if ( list.length === 12 ) {
+            list.shift();
+        }
+        list.push(data);
+   }
+
+   function showAlert() {
+        var alertQueue = [];
+        myLineChart.datasets[ 0 ].bars.forEach(function(barData){
+            updateAlertQueue(alertQueue, barData.value);
+        });
+        if ( alertQueue.length === 12 ) {
+            var sum = alertQueue.reduce(function(pre, cur) {
+                return pre + parseFloat(cur);
+            }, 0);
+            if (sum / 12 > 1) {
+                console.log("High average load!");
+            }
+        }
+        setTimeout(showAlert, 30000);
    }
 
    $.get( "/config", function( config ) {
@@ -92,14 +119,33 @@ $( document ).ready(function() {
        data.datasets[ 1 ].data = [];
        data.datasets[ 2 ].data = [];
        for(var i=0; i< config.size; i++) {
-           data.labels.push( (i * config.factor) + ' secs');
-           data.datasets[ 0 ].data.push(0);
-           data.datasets[ 1 ].data.push(0);
-           data.datasets[ 2 ].data.push(0);
+            data.labels.push( (i * config.factor) + ' secs');
+            data.datasets[ 0 ].data.push(0);
+            data.datasets[ 1 ].data.push(0);
+            data.datasets[ 2 ].data.push(0);
        }
        myLineChart = new Chart(ctx).Bar(data, options);
-       updateData(1000);
+       updateData(2000);
    });
 
-   
+   setTimeout(showAlert, 30000);
 });
+
+
+function startJob() {
+    $.get( "/start", function( responseStr ) {
+        console.log(responseStr);
+    })
+}
+
+function stopJob() {
+    $.get( "/stop", function( responseStr ) {
+        console.log(responseStr);
+    })
+}
+
+function clearQueue() {
+    $.get( "/clear", function( responseStr ) {
+        console.log(responseStr);
+    })
+}

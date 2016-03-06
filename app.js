@@ -18,12 +18,17 @@ app.get('/', (req, res) => {
 });
 
 app.get('/uptime', (req, res) => {
-    res.send(DataProcessor.queue);
+    res.send(DataProcessor);
 });
 
 app.get('/stop', (req, res) => {
     cronJob.stop();
     res.send("Cronjob stopped");
+});
+
+app.get('/clear', (req, res) => {
+    DataProcessor.clearQueue();
+    res.send("Cronjob clear");
 });
 
 app.get('/config', (req, res) => {
