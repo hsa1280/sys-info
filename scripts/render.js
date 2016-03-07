@@ -28,6 +28,10 @@ var data = {
     ]
 };
 
+var last1MinDataSet = null;
+var alertMessageQueue = [];
+var alertOccured = false;
+
 $( document ).ready(function() {
    var ctx = $("#myChart").get(0).getContext("2d");
 
@@ -70,6 +74,7 @@ $( document ).ready(function() {
    var myLineChart = null;
 
    function updateData(frequency) {
+   //update the data every 2 seconds, we can change it to 10 seconds later
         setTimeout(function() {
             $.get( "/uptime", function( dataProcessor ) {
               data.datasets[ 0 ].data = [];
@@ -77,53 +82,16 @@ $( document ).ready(function() {
               data.datasets[ 2 ].data = [];
 
               dataProcessor.queue.forEach(function(loadData, index) {
-
-
                     myLineChart.datasets[ 0 ].bars[ index ].value = loadData.last1Min;
                     myLineChart.datasets[ 1 ].bars[ index ].value = loadData.last5Min;
                     myLineChart.datasets[ 2 ].bars[ index ].value = loadData.last15Min;
               });
+              last1MinDataSet = myLineChart.datasets[0];
 
               myLineChart.update();
             });
             updateData(frequency);
         }, frequency);
-   }
-
-   function updateAlertQueue(list, data) {
-        if ( list.length === 12 ) {
-            list.shift();
-        }
-        list.push(data);
-   }
-
-   var alertMessageQueue = [];
-   var alertOccured = false;
-
-   function showAlert() {
-        var alertQueue = [];
-        myLineChart.datasets[ 0 ].bars.forEach(function(barData){
-            updateAlertQueue(alertQueue, barData.value);
-        });
-        if ( alertQueue.length === 12 ) {
-            var sum = alertQueue.reduce(function(pre, cur) {
-                return pre + parseFloat(cur);
-            }, 0);
-            var average = sum / 12;
-            if (average > 2) {
-                alertOccured = true;
-                var message = "High load generated an alert - load = " + average + ", triggered at " + new Date();
-                alertMessageQueue.push(message);
-                var alertElement = document.getElementById("alert");
-                alertElement.innerHTML = alertMessageQueue;
-                alert(message);
-            }
-            if (average < 2 && alertOccured) {
-                alertOccured = false;
-                console.log("Load is back to normal at " + new Date());
-            }
-        }
-        setTimeout(showAlert, 30000);
    }
 
    $.get( "/config", function( config ) {
@@ -138,12 +106,43 @@ $( document ).ready(function() {
             data.datasets[ 2 ].data.push(0);
        }
        myLineChart = new Chart(ctx).Bar(data, options);
-       updateData(2000);
+       updateData(config.frequency);
    });
 
    setTimeout(showAlert, 30000);
 });
 
+function updateAlertQueue(list, data) {
+    if ( list.length === 12 ) {
+        list.shift();
+    }
+    list.push(data);
+}
+
+function showAlert() {
+    var alertQueue = [];
+    last1MinDataSet.bars.forEach(function(barData){
+        updateAlertQueue(alertQueue, barData.value);
+    });
+    var sum = alertQueue.reduce(function(pre, cur) {
+        return pre + parseFloat(cur);
+    }, 0);
+    var average = sum / 12;
+    if (average > 2) {
+        alertOccured = true;
+        var message = "High load generated an alert - load = " + average + ", triggered at " + new Date();
+        alertMessageQueue.push(message);
+        var alertElement = document.getElementById("alert");
+        alertElement.innerHTML = alertMessageQueue;
+        alert(message);
+    }
+    if (average < 2 && alertOccured) {
+        alertOccured = false;
+        alert("Load is back to normal at " + new Date());
+    }
+    //check showAlert() every 30 seconds, we can change it to 2 minutes later
+    setTimeout(showAlert, 30000);
+}
 
 function startJob() {
     $.get( "/start", function( responseStr ) {
