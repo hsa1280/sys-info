@@ -1,8 +1,23 @@
-describe('Test render functions', function(){
+describe("Test render functions - ", function(){
 
-    it('Test testFunction : ', function(done) {
-        expect(testFunction()).toEqual('test_return');
-        done();
+    beforeEach(function() {
+        window.last1MinDataSet = {
+            bars: [
+                {
+                    value: 36
+                }
+            ]
+        }
+    });
+
+    it("shwoAlert() should push high load message into history queue", function() {
+        spyOn(window, "updateAlertQueue").and.callThrough();
+
+        var alertQueue = [];
+        showAlert();
+        expect(window.updateAlertQueue).toHaveBeenCalled();
+        expect(window.alertOccured).toBeTruthy();
+        expect(window.alertMessageQueue.length).toEqual(1);
     });
 
 });

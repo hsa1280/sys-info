@@ -133,7 +133,8 @@ function showAlert() {
         var message = "High load generated an alert - load = " + average + ", triggered at " + new Date();
         alertMessageQueue.push(message);
         var alertElement = document.getElementById("alert");
-        alertElement.innerHTML = alertMessageQueue;
+        if (alertElement)
+            alertElement.innerHTML = alertMessageQueue;
         alert(message);
     }
     if (average < 2 && alertOccured) {
@@ -154,8 +155,4 @@ function stopJob() {
     $.get( "/stop", function( responseStr ) {
         console.log(responseStr);
     })
-}
-
-function testFunction() {
-    return "test_return";
 }
