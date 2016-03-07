@@ -26,11 +26,6 @@ app.get('/stop', (req, res) => {
     res.send("Cronjob stopped");
 });
 
-app.get('/clear', (req, res) => {
-    DataProcessor.clearQueue();
-    res.send("Cronjob clear");
-});
-
 app.get('/config', (req, res) => {
     res.send({
         size: size,

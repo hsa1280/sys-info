@@ -97,6 +97,9 @@ $( document ).ready(function() {
         list.push(data);
    }
 
+   var alertMessageQueue = [];
+   var alertOccured = false;
+
    function showAlert() {
         var alertQueue = [];
         myLineChart.datasets[ 0 ].bars.forEach(function(barData){
@@ -106,8 +109,18 @@ $( document ).ready(function() {
             var sum = alertQueue.reduce(function(pre, cur) {
                 return pre + parseFloat(cur);
             }, 0);
-            if (sum / 12 > 1) {
-                console.log("High average load!");
+            var average = sum / 12;
+            if (average > 2) {
+                alertOccured = true;
+                var message = "High load generated an alert - load = " + average + ", triggered at " + new Date();
+                alertMessageQueue.push(message);
+                var alertElement = document.getElementById("alert");
+                alertElement.innerHTML = alertMessageQueue;
+                alert(message);
+            }
+            if (average < 2 && alertOccured) {
+                alertOccured = false;
+                console.log("Load is back to normal at " + new Date());
             }
         }
         setTimeout(showAlert, 30000);
@@ -144,8 +157,6 @@ function stopJob() {
     })
 }
 
-function clearQueue() {
-    $.get( "/clear", function( responseStr ) {
-        console.log(responseStr);
-    })
+function testFunction() {
+    return "test_return";
 }
