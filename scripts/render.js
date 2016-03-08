@@ -145,17 +145,18 @@ function showAlert() {
     var sum = alertQueue.reduce(function(pre, cur) {
         return pre + parseFloat(cur);
     }, 0);
-    var average = sum / 12;
-    if (average > 2) {
+    var loadAverage = sum / 12;
+    if (loadAverage > 2) {
         alertOccured = true;
-        var message = "High load generated an alert - load = " + average + ", triggered at " + new Date();
+        var message = "High load generated an alert - load = " + loadAverage + ", triggered at " + new Date();
         alertMessageQueue.push(message);
         var alertElement = document.getElementById("alert");
         if (alertElement)
             alertElement.innerHTML = alertMessageQueue;
         alert(message);
     }
-    if (average < 2 && alertOccured) {
+    //only shows this message when load average is lower than 2 and the load average was higher than 2 previously
+    if (loadAverage < 2 && alertOccured) {
         alertOccured = false;
         alert("Load is back to normal at " + new Date());
     }
