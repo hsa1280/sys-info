@@ -3,7 +3,7 @@ describe("Test render functions - ", function(){
     describe("When load average is larger than 2", function() {
         beforeEach(function() {
             window.last1MinDataSet = {
-                bars: [
+                points: [
                     {
                         value: 36
                     }
@@ -27,7 +27,7 @@ describe("Test render functions - ", function(){
     describe("When load average is less than 2 and alertOccured is true", function() {
         beforeEach(function() {
             window.last1MinDataSet = {
-                bars: [
+                points: [
                     {
                         value: 23
                     }
