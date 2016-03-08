@@ -29,7 +29,7 @@ app.get('/stop', (req, res) => {
 app.get('/config', (req, res) => {
     res.send({
         size: size,
-        frequency: 10000,
+        frequency: 2000,
         factor: 10
     });
 });
@@ -39,7 +39,7 @@ app.get('/start', (req, res) => {
     res.send("Cronjob started");
 });
 
-var cronJob = cron.job("*/10 * * * * *", () => {
+var cronJob = cron.job("*/2 * * * * *", () => {
     DataProcessor.getServerLoad();
     console.log(DataProcessor);
     console.log('cron job completed');

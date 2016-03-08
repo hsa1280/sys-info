@@ -1,3 +1,4 @@
 node_modules/
 .idea/
 sys-info.iml
+npm-debug.log

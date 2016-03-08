@@ -11,32 +11,11 @@ var data = {
             pointHighlightStroke: "rgba(220,220,220,1)",
             data: []
         }
-//        {
-//            label: "5 minute",
-//            fillColor: "rgba(151,187,205,0.2)",
-//            strokeColor: "rgba(151,187,205,1)",
-//            pointColor: "rgba(151,187,205,1)",
-//            pointStrokeColor: "#fff",
-//            pointHighlightFill: "#fff",
-//            pointHighlightStroke: "rgba(151,187,205,1)",
-//            data: []
-//        },
-//        {
-//            label: "15 minute",
-//            fillColor: "rgba(151,167,215,0.2)",
-//            strokeColor: "rgba(151,167,215,1)",
-//            pointColor: "rgba(151,167,215,1)",
-//            pointStrokeColor: "#fff",
-//            pointHighlightFill: "#fff",
-//            pointHighlightStroke: "rgba(151,187,205,1)",
-//            data: []
-//        }
     ]
 };
 
 var last1MinDataSet = null;
-var alertMessageQueue = [];
-var alertOccured = false;
+var alertOccurred = false;
 
 $( document ).ready(function() {
    var ctx = $("#myChart").get(0).getContext("2d");
@@ -92,19 +71,16 @@ $( document ).ready(function() {
    var myLineChart = null;
 
    function updateData(frequency) {
-   //update the data every 2 seconds, we can change it to 10 seconds later
+   //update the data every 10 seconds
         setTimeout(function() {
             $.get( "/uptime", function( dataList ) {
               data.datasets[ 0 ].data = [];
-//              data.datasets[ 1 ].data = [];
-//              data.datasets[ 2 ].data = [];
 
               dataList.forEach(function(loadData, index) {
                     myLineChart.datasets[ 0 ].points[ index ].value = loadData.last1Min;
-//                    myLineChart.datasets[ 1 ].points[ index ].value = loadData.last5Min;
-//                    myLineChart.datasets[ 2 ].points[ index ].value = loadData.last15Min;
               });
-              last1MinDataSet = myLineChart.datasets[0];
+              //Assign data set to external variable so we can use it in showAlert()
+              last1MinDataSet = dataList;
 
               myLineChart.update();
             });
@@ -115,13 +91,9 @@ $( document ).ready(function() {
    $.get( "/config", function( config ) {
        data.labels = [];
        data.datasets[ 0 ].data = [];
-//       data.datasets[ 1 ].data = [];
-//       data.datasets[ 2 ].data = [];
        for(var i=0; i< config.size; i++) {
             data.labels.push( (i * config.factor));
             data.datasets[ 0 ].data.push(0);
-//            data.datasets[ 1 ].data.push(0);
-//            data.datasets[ 2 ].data.push(0);
        }
        myLineChart = new Chart(ctx).Line(data, options);
        updateData(config.frequency);
@@ -130,6 +102,7 @@ $( document ).ready(function() {
    setTimeout(showAlert, 30000);
 });
 
+//Save the past two minutes data into array
 function updateAlertQueue(list, data) {
     if ( list.length === 12 ) {
         list.shift();
@@ -137,30 +110,36 @@ function updateAlertQueue(list, data) {
     list.push(data);
 }
 
+//check if we want to show alert
 function showAlert() {
     var alertQueue = [];
-    last1MinDataSet.points.forEach(function(barData){
-        updateAlertQueue(alertQueue, barData.value);
+    //push the past two minutes data into alertQueue
+    last1MinDataSet.forEach(function(data){
+        updateAlertQueue(alertQueue, data.last1Min);
     });
+    //Sum the past two minutes data up
     var sum = alertQueue.reduce(function(pre, cur) {
         return pre + parseFloat(cur);
     }, 0);
-    var loadAverage = sum / 12;
-    if (loadAverage > 2) {
-        alertOccured = true;
-        var message = "High load generated an alert - load = " + loadAverage + ", triggered at " + new Date();
-        alertMessageQueue.push(message);
+    var loadAverage = parseFloat( (sum / 12).toFixed(2) );
+    if (loadAverage > 1.5) {
+        //Set alertOccurred flag to true for later use
+        alertOccurred = true;
+        var alertMessage = "High load generated an alert - load = " + loadAverage + ", triggered at " + new Date();
         var alertElement = document.getElementById("alert");
-        if (alertElement)
-            alertElement.innerHTML = alertMessageQueue;
-        alert(message);
+        if (alertElement) {
+            var alertDiv = document.createElement('div');
+            alertDiv.innerHTML = alertMessage;
+            alertElement.appendChild(alertDiv);
+        }
+        alert(alertMessage);
     }
     //only shows this message when load average is lower than 2 and the load average was higher than 2 previously
-    if (loadAverage < 2 && alertOccured) {
-        alertOccured = false;
+    if (loadAverage < 1.5 && alertOccurred) {
+        alertOccurred = false;
         alert("Load is back to normal at " + new Date());
     }
-    //check showAlert() every 30 seconds, we can change it to 2 minutes later
+    //call showAlert() every 120 seconds
     setTimeout(showAlert, 30000);
 }
 
