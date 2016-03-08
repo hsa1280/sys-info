@@ -10,27 +10,27 @@ var data = {
             pointHighlightFill: "#fff",
             pointHighlightStroke: "rgba(220,220,220,1)",
             data: []
-        },
-        {
-            label: "5 minute",
-            fillColor: "rgba(151,187,205,0.2)",
-            strokeColor: "rgba(151,187,205,1)",
-            pointColor: "rgba(151,187,205,1)",
-            pointStrokeColor: "#fff",
-            pointHighlightFill: "#fff",
-            pointHighlightStroke: "rgba(151,187,205,1)",
-            data: []
-        },
-        {
-            label: "15 minute",
-            fillColor: "rgba(151,167,215,0.2)",
-            strokeColor: "rgba(151,167,215,1)",
-            pointColor: "rgba(151,167,215,1)",
-            pointStrokeColor: "#fff",
-            pointHighlightFill: "#fff",
-            pointHighlightStroke: "rgba(151,187,205,1)",
-            data: []
         }
+//        {
+//            label: "5 minute",
+//            fillColor: "rgba(151,187,205,0.2)",
+//            strokeColor: "rgba(151,187,205,1)",
+//            pointColor: "rgba(151,187,205,1)",
+//            pointStrokeColor: "#fff",
+//            pointHighlightFill: "#fff",
+//            pointHighlightStroke: "rgba(151,187,205,1)",
+//            data: []
+//        },
+//        {
+//            label: "15 minute",
+//            fillColor: "rgba(151,167,215,0.2)",
+//            strokeColor: "rgba(151,167,215,1)",
+//            pointColor: "rgba(151,167,215,1)",
+//            pointStrokeColor: "#fff",
+//            pointHighlightFill: "#fff",
+//            pointHighlightStroke: "rgba(151,187,205,1)",
+//            data: []
+//        }
     ]
 };
 
@@ -94,15 +94,15 @@ $( document ).ready(function() {
    function updateData(frequency) {
    //update the data every 2 seconds, we can change it to 10 seconds later
         setTimeout(function() {
-            $.get( "/uptime", function( dataProcessor ) {
+            $.get( "/uptime", function( dataList ) {
               data.datasets[ 0 ].data = [];
-              data.datasets[ 1 ].data = [];
-              data.datasets[ 2 ].data = [];
+//              data.datasets[ 1 ].data = [];
+//              data.datasets[ 2 ].data = [];
 
-              dataProcessor.queue.forEach(function(loadData, index) {
+              dataList.forEach(function(loadData, index) {
                     myLineChart.datasets[ 0 ].points[ index ].value = loadData.last1Min;
-                    myLineChart.datasets[ 1 ].points[ index ].value = loadData.last5Min;
-                    myLineChart.datasets[ 2 ].points[ index ].value = loadData.last15Min;
+//                    myLineChart.datasets[ 1 ].points[ index ].value = loadData.last5Min;
+//                    myLineChart.datasets[ 2 ].points[ index ].value = loadData.last15Min;
               });
               last1MinDataSet = myLineChart.datasets[0];
 
@@ -115,13 +115,13 @@ $( document ).ready(function() {
    $.get( "/config", function( config ) {
        data.labels = [];
        data.datasets[ 0 ].data = [];
-       data.datasets[ 1 ].data = [];
-       data.datasets[ 2 ].data = [];
+//       data.datasets[ 1 ].data = [];
+//       data.datasets[ 2 ].data = [];
        for(var i=0; i< config.size; i++) {
-            data.labels.push( (i * config.factor) + ' secs');
+            data.labels.push( (i * config.factor));
             data.datasets[ 0 ].data.push(0);
-            data.datasets[ 1 ].data.push(0);
-            data.datasets[ 2 ].data.push(0);
+//            data.datasets[ 1 ].data.push(0);
+//            data.datasets[ 2 ].data.push(0);
        }
        myLineChart = new Chart(ctx).Line(data, options);
        updateData(config.frequency);
@@ -139,7 +139,7 @@ function updateAlertQueue(list, data) {
 
 function showAlert() {
     var alertQueue = [];
-    last1MinDataSet.bars.forEach(function(barData){
+    last1MinDataSet.points.forEach(function(barData){
         updateAlertQueue(alertQueue, barData.value);
     });
     var sum = alertQueue.reduce(function(pre, cur) {

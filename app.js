@@ -1,6 +1,6 @@
 require('shelljs/global');
 
-var size = 20
+var size = 60
 var DataProcessor = new require('./lib/data.processor.js')(size);
 
 var express = require('express');
@@ -18,7 +18,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/uptime', (req, res) => {
-    res.send(DataProcessor);
+    res.send(DataProcessor.queue);
 });
 
 app.get('/stop', (req, res) => {
