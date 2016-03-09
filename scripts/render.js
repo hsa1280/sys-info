@@ -16,6 +16,7 @@ var data = {
 
 var last1MinDataSet = null;
 var alertOccurred = false;
+var last2Min = 120000;
 
 $( document ).ready(function() {
    var ctx = $("#myChart").get(0).getContext("2d");
@@ -99,7 +100,8 @@ $( document ).ready(function() {
        updateData(config.frequency);
    });
 
-   setTimeout(showAlert, 30000);
+   //Start the showAlert() when running the application, then showAlert() will be invoked every two minutes
+   setTimeout(showAlert, last2Min);
 });
 
 //Save the past two minutes data into array
@@ -122,7 +124,7 @@ function showAlert() {
         return pre + parseFloat(cur);
     }, 0);
     var loadAverage = parseFloat( (sum / 12).toFixed(2) );
-    if (loadAverage > 1.5) {
+    if (loadAverage > 1) {
         //Set alertOccurred flag to true for later use
         alertOccurred = true;
         var alertMessage = "High load generated an alert - load = " + loadAverage + ", triggered at " + new Date();
@@ -135,12 +137,12 @@ function showAlert() {
         alert(alertMessage);
     }
     //only shows this message when load average is lower than 2 and the load average was higher than 2 previously
-    if (loadAverage < 1.5 && alertOccurred) {
+    if (loadAverage < 1 && alertOccurred) {
         alertOccurred = false;
         alert("Load is back to normal at " + new Date());
     }
     //call showAlert() every 120 seconds
-    setTimeout(showAlert, 30000);
+    setTimeout(showAlert, last2Min);
 }
 
 function startJob() {
